@@ -64,7 +64,7 @@ export default function Home() {
       if (!res.ok || data.error) {
         setErrorMsg(data.error || 'Failed to fetch bill. Please verify the reference number.');
       } else {
-        setResult(data);
+        setResult(data.data || data);
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Network error while reaching bill server.');
