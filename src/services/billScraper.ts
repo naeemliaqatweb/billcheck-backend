@@ -827,3 +827,35 @@ export async function fetchBillDetails(
   // Fallback: offline generated mock data
   return generateMockBill(company, clean);
 }
+
+/**
+ * Fetches the raw, authentic duplicate bill HTML directly from the official utility provider server.
+ */
+export async function fetchOfficialBillHtml(
+  companyKey: string,
+  rawRef: string,
+  searchType?: 'refno' | 'consumerId' | 'auto'
+): Promise<string | null> {
+  const company = companyKey.toUpperCase();
+  const clean = cleanReferenceNumber(rawRef);
+  const meta = PROVIDERS_META[company];
+  const pitcCompanies = ['LESCO', 'MEPCO', 'FESCO', 'GEPCO', 'IESCO', 'PESCO', 'HESCO', 'SEPCO', 'QESCO', 'TESCO'];
+
+  if (meta?.portalUrl && pitcCompanies.includes(company)) {
+    try {
+      const primaryMode: 'refno' | 'appno' = (searchType === 'consumerId' || clean.length <= 10) ? 'appno' : 'refno';
+      const secondaryMode: 'refno' | 'appno' = primaryMode === 'appno' ? 'refno' : 'appno';
+
+      let html = await fetchFromPitcPortal(meta.portalUrl, clean, primaryMode);
+      if (html && html.length > 200) return html;
+
+      html = await fetchFromPitcPortal(meta.portalUrl, clean, secondaryMode);
+      if (html && html.length > 200) return html;
+    } catch (err) {
+      console.error(`[BillScraper] fetchOfficialBillHtml failed for ${company}:`, err);
+    }
+  }
+
+  return null;
+}
+

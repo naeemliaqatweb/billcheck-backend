@@ -24,7 +24,7 @@ export default function Home() {
   const [company, setCompany] = useState('LESCO');
   const [refNo, setRefNo] = useState('08115120562000');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, any> | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const filteredProviders = PROVIDERS.filter((p) => p.type === utilityType);
@@ -66,8 +66,8 @@ export default function Home() {
       } else {
         setResult(data);
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Network error while reaching bill server.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Network error while reaching bill server.');
     } finally {
       setLoading(false);
     }
