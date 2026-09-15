@@ -383,13 +383,15 @@ function parsePitcBillHtml(html: string, company: string, refNo: string): Scrape
 
   // ── 6. 12-Month History ───────────────────────────────────────────────────
   const history12Months = parseBillHistory(html);
+  const calculatedUnits = (presentReadingRaw > prevReadingRaw && prevReadingRaw > 0) ? (presentReadingRaw - prevReadingRaw) * mf : 0;
+  const unitsConsumed = unitsFromCells || calculatedUnits || (history12Months.length > 0 ? history12Months[history12Months.length - 1].units : 135);
   const finalHistory = history12Months.length >= 3
     ? history12Months.slice(-12)
-    : generate12MonthHistory(unitsFromCells || 135, payableWithinDueDate || 2366);
+    : generate12MonthHistory(unitsConsumed, payableWithinDueDate || 2366);
 
-  const unitsConsumed = unitsFromCells || (finalHistory.length > 0 ? finalHistory[finalHistory.length - 1].units : 135);
-  const previousReading = prevReadingRaw || 9459;
+  const previousReading = prevReadingRaw || (presentReadingRaw > unitsConsumed ? presentReadingRaw - unitsConsumed : 0);
   const presentReading = presentReadingRaw || (previousReading + unitsConsumed);
+
 
   // ── 7. Messages & Announcements ───────────────────────────────────────────
   const fpaBody = html.match(/class="ibn-bill-messages__fpa-body"[^>]*>([\s\S]*?)<\/div>/i);
@@ -477,54 +479,78 @@ function parsePitcBillHtml(html: string, company: string, refNo: string): Scrape
  * searchType: 'refno' for 14-digit reference no, 'appno' for Customer/Consumer ID.
  */
 async function fetchFromPitcPortal(portalUrl: string, query: string, searchType: 'refno' | 'appno' = 'refno'): Promise<string | null> {
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  const headers: Record<string, string> = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
   };
 
-  // Step 1: GET — obtain session cookies and ASP.NET VIEWSTATE tokens
-  const getResp = await fetch(portalUrl, { headers, redirect: 'follow' });
-  if (!getResp.ok) return null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-  const rawCookies = getResp.headers.getSetCookie?.() || [];
-  const cookieHeader = rawCookies.map(c => c.split(';')[0]).join('; ');
-  const getHtml = await getResp.text();
+    // Step 1: GET — obtain session cookies and ASP.NET VIEWSTATE tokens
+    const getResp = await fetch(portalUrl, { headers, redirect: 'follow', signal: controller.signal });
+    if (!getResp.ok) {
+      clearTimeout(timeoutId);
+      return null;
+    }
 
-  const viewState       = extractHiddenInput(getHtml, '__VIEWSTATE');
-  const vsGenerator     = extractHiddenInput(getHtml, '__VIEWSTATEGENERATOR');
-  const eventValidation = extractHiddenInput(getHtml, '__EVENTVALIDATION');
-  const csrf            = extractHiddenInput(getHtml, '__RequestVerificationToken');
+    let cookieHeader = '';
+    if (typeof getResp.headers.getSetCookie === 'function') {
+      const rawCookies = getResp.headers.getSetCookie() || [];
+      cookieHeader = rawCookies.map((c) => c.split(';')[0]).join('; ');
+    }
+    if (!cookieHeader) {
+      const raw = getResp.headers.get('set-cookie') || '';
+      cookieHeader = raw.split(',').map((c) => c.split(';')[0].trim()).join('; ');
+    }
 
-  // Step 2: POST with query and all ASP.NET tokens
-  const formData = new URLSearchParams({
-    __EVENTTARGET:              '',
-    __EVENTARGUMENT:            '',
-    __LASTFOCUS:                '',
-    __VIEWSTATE:                viewState,
-    __VIEWSTATEGENERATOR:       vsGenerator,
-    __EVENTVALIDATION:          eventValidation,
-    __RequestVerificationToken: csrf,
-    rbSearchByList:             searchType,
-    searchTextBox:              query,
-    btnSearch:                  'Search',
-  });
+    const getHtml = await getResp.text();
 
-  const postResp = await fetch(portalUrl, {
-    method: 'POST',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Referer': portalUrl,
-      'Cookie': cookieHeader,
-    },
-    body: formData.toString(),
-    redirect: 'follow',
-  });
+    const viewState       = extractHiddenInput(getHtml, '__VIEWSTATE');
+    const vsGenerator     = extractHiddenInput(getHtml, '__VIEWSTATEGENERATOR');
+    const eventValidation = extractHiddenInput(getHtml, '__EVENTVALIDATION');
+    const csrf            = extractHiddenInput(getHtml, '__RequestVerificationToken');
 
-  if (!postResp.ok) return null;
-  return await postResp.text();
+    // Step 2: POST with query and all ASP.NET tokens
+    const formData = new URLSearchParams({
+      __EVENTTARGET:              '',
+      __EVENTARGUMENT:            '',
+      __LASTFOCUS:                '',
+      __VIEWSTATE:                viewState,
+      __VIEWSTATEGENERATOR:       vsGenerator,
+      __EVENTVALIDATION:          eventValidation,
+      __RequestVerificationToken: csrf,
+      rbSearchByList:             searchType,
+      searchTextBox:              query,
+      btnSearch:                  'Search',
+    });
+
+    const postResp = await fetch(portalUrl, {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': portalUrl,
+        'Cookie': cookieHeader,
+      },
+      body: formData.toString(),
+      redirect: 'follow',
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+    if (!postResp.ok) return null;
+    return await postResp.text();
+  } catch (err) {
+    console.error(`[BillScraper] fetchFromPitcPortal error for ${portalUrl}:`, err);
+    return null;
+  }
 }
+
 
 // ─── Fallback: Seasonal Mock Generator ──────────────────────────────────────
 
