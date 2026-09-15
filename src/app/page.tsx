@@ -26,6 +26,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, any> | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [officialPortalUrl, setOfficialPortalUrl] = useState<string | null>(null);
 
   const filteredProviders = PROVIDERS.filter((p) => p.type === utilityType);
 
@@ -49,11 +50,13 @@ export default function Home() {
   const checkBill = async () => {
     if (!refNo.trim()) {
       setErrorMsg('Please enter a valid reference number.');
+      setOfficialPortalUrl(null);
       return;
     }
     setLoading(true);
     setResult(null);
     setErrorMsg(null);
+    setOfficialPortalUrl(null);
     try {
       const res = await fetch('/api/bills', {
         method: 'POST',
@@ -61,8 +64,11 @@ export default function Home() {
         body: JSON.stringify({ company, referenceNumber: refNo }),
       });
       const data = await res.json();
-      if (!res.ok || data.error) {
+      if (!res.ok || !data.success || data.error) {
         setErrorMsg(data.error || 'Failed to fetch bill. Please verify the reference number.');
+        if (data.officialPortalUrl) {
+          setOfficialPortalUrl(data.officialPortalUrl);
+        }
       } else {
         setResult(data.data || data);
       }
@@ -72,6 +78,7 @@ export default function Home() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
@@ -230,12 +237,31 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Error Message */}
+          {/* Notice & Official Portal Link */}
           {errorMsg && (
-            <div className="p-4 bg-rose-950/40 border border-rose-800/60 rounded-xl text-rose-300 text-xs mb-6">
-              ⚠️ {errorMsg}
+            <div className="p-5 bg-amber-950/40 border border-amber-800/60 rounded-xl text-slate-200 text-sm mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="font-bold text-amber-300 flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>{errorMsg}</span>
+                </p>
+                <p className="text-xs text-slate-400">
+                  سرکاری ڈسٹری بیوشن پورٹل پر اپنا اصل و تصدیق شدہ بل براہِ راست دیکھنے کے لیے بٹن دبائیں۔
+                </p>
+              </div>
+              {officialPortalUrl && (
+                <a
+                  href={officialPortalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-lg whitespace-nowrap transition flex items-center gap-1.5 shadow shadow-emerald-950 flex-shrink-0"
+                >
+                  <span>Open Official Portal ↗</span>
+                </a>
+              )}
             </div>
           )}
+
 
           {/* Rendered Bill Result Card */}
           {result && (

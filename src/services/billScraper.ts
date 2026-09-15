@@ -105,7 +105,55 @@ export const PROVIDERS_META: Record<string, { name: string; type: 'electricity' 
   SSGC:     { name: 'Sui Southern Gas Company',              type: 'gas',         portalUrl: 'https://www.ssgc.com.pk/' },
 };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+export class BillFetchError extends Error {
+  officialPortalUrl: string;
+  company: string;
+  referenceNumber: string;
+
+  constructor(message: string, officialPortalUrl: string, company: string, referenceNumber: string) {
+    super(message);
+    this.name = 'BillFetchError';
+    this.officialPortalUrl = officialPortalUrl;
+    this.company = company;
+    this.referenceNumber = referenceNumber;
+  }
+}
+
+export function getOfficialPortalDirectUrl(companyKey: string, rawRef: string): string {
+  const company = companyKey.toUpperCase();
+  const clean = cleanReferenceNumber(rawRef);
+
+  const pitcCompanies: Record<string, string> = {
+    LESCO: 'https://bill.pitc.com.pk/lescobill',
+    MEPCO: 'https://bill.pitc.com.pk/mepcobill',
+    FESCO: 'https://bill.pitc.com.pk/fescobill',
+    GEPCO: 'https://bill.pitc.com.pk/gepcobill',
+    IESCO: 'https://bill.pitc.com.pk/iescobill',
+    PESCO: 'https://bill.pitc.com.pk/pescobill',
+    HESCO: 'https://bill.pitc.com.pk/hescobill',
+    SEPCO: 'https://bill.pitc.com.pk/sepcobill',
+    QESCO: 'https://bill.pitc.com.pk/qescobill',
+    TESCO: 'https://bill.pitc.com.pk/tescobill',
+  };
+
+  if (pitcCompanies[company]) {
+    return `${pitcCompanies[company]}/general?refno=${clean}`;
+  }
+
+  if (company === 'KELECTRIC' || company === 'KE') {
+    return `https://staging.ke.com.pk:24555/v1/bills/duplicate?accountNumber=${clean}`;
+  }
+
+  if (company === 'SNGPL') {
+    return `https://www.sngpl.com.pk/viewbill?consumer=${clean}`;
+  }
+
+  if (company === 'SSGC') {
+    return `https://www.ssgc.com.pk/web/view-bill/?cust_id=${clean}`;
+  }
+
+  return `https://bill.pitc.com.pk/lescobill/general?refno=${clean}`;
+}
 
 export function cleanReferenceNumber(input: string): string {
   return input.replace(/[^0-9a-zA-Z]/g, '').trim();
@@ -118,6 +166,7 @@ export function formatReferenceNumber(ref: string): string {
   }
   return clean;
 }
+
 
 /**
  * Extract a hidden input value from ASP.NET HTML
@@ -843,16 +892,22 @@ export async function fetchBillDetails(
         const parsed = parsePitcBillHtml(html, company, clean);
         if (parsed) return parsed;
       }
-
-      console.warn(`[BillScraper] Bill not found on PITC portal for ${company}/${clean} (tried ${primaryMode} & ${secondaryMode})`);
     } catch (err) {
-      console.error(`[BillScraper] Portal scraping failed for ${company}:`, err);
+      console.error(`[BillScraper] Portal scraping error for ${company}:`, err);
     }
   }
 
-  // Fallback: offline generated mock data
-  return generateMockBill(company, clean);
+  // If scraping was not possible or failed, throw BillFetchError with the direct official portal URL
+  const officialUrl = getOfficialPortalDirectUrl(company, clean);
+  throw new BillFetchError(
+    `Live bill lookup could not reach ${company} servers. Please view your official authentic bill directly on the provider portal.`,
+    officialUrl,
+    company,
+    clean
+  );
 }
+
+
 
 /**
  * Fetches the raw, authentic duplicate bill HTML directly from the official utility provider server.

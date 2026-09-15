@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchBillDetails, PROVIDERS_META } from '@/services/billScraper';
+import { fetchBillDetails, PROVIDERS_META, getOfficialPortalDirectUrl, BillFetchError } from '@/services/billScraper';
 
 export async function GET() {
   return NextResponse.json({
@@ -14,10 +14,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  let company = '';
+  let query = '';
+
   try {
     const body = await request.json();
-    const { company, referenceNumber, consumerId, searchType } = body;
-    const query = (referenceNumber || consumerId || '').toString().trim();
+    company = (body.company || '').toString().trim();
+    query = (body.referenceNumber || body.consumerId || '').toString().trim();
 
     if (!company || !query) {
       return NextResponse.json(
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const billData = await fetchBillDetails(company, query, searchType);
+    const billData = await fetchBillDetails(company, query, body.searchType);
 
     return NextResponse.json({
       success: true,
@@ -37,12 +40,21 @@ export async function POST(request: Request) {
       disclaimer: 'This bill information is provided for user convenience from public portals. PakBill Hub has no official affiliation with the government or utility providers.',
     });
   } catch (error) {
+    const officialPortalUrl = error instanceof BillFetchError
+      ? error.officialPortalUrl
+      : getOfficialPortalDirectUrl(company || 'LESCO', query || '');
+
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch bill details',
+        error: error instanceof Error ? error.message : 'Failed to fetch live bill details from portal.',
+        messageUrdu: 'سرور سے لائیو ڈیٹا حاصل نہیں ہو سکا۔ سرکاری پورٹل پر اپنا اصل بل دیکھنے کے لیے نیچے دیے گئے بٹن پر کلک کریں۔',
+        officialPortalUrl,
+        company,
+        referenceNumber: query,
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }
+
