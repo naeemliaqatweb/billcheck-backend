@@ -237,28 +237,33 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Notice & Official Portal Link */}
+          {/* Notice & Official Portal Direct Action */}
           {errorMsg && (
-            <div className="p-5 bg-amber-950/40 border border-amber-800/60 rounded-xl text-slate-200 text-sm mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <p className="font-bold text-amber-300 flex items-center gap-2">
-                  <span>⚠️</span>
-                  <span>{errorMsg}</span>
-                </p>
-                <p className="text-xs text-slate-400">
-                  سرکاری ڈسٹری بیوشن پورٹل پر اپنا اصل و تصدیق شدہ بل براہِ راست دیکھنے کے لیے بٹن دبائیں۔
-                </p>
+            <div className="p-6 bg-slate-950/90 border border-emerald-500/40 rounded-2xl text-slate-200 text-sm mb-6 shadow-xl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-base">
+                    <span>🏛️</span>
+                    <span>Official Provider Portal Direct View</span>
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    {errorMsg}
+                  </p>
+                  <p className="text-xs text-emerald-300/90 font-medium">
+                    سرکاری ڈسٹری بیوشن پورٹل پر اپنا اصل، مصدقہ بل براہِ راست دیکھنے کے لیے نیچے دیا گیا بٹن دبائیں۔
+                  </p>
+                </div>
+                {officialPortalUrl && (
+                  <a
+                    href={officialPortalUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full sm:w-auto text-center bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3 rounded-xl whitespace-nowrap transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950 flex-shrink-0 active:scale-95"
+                  >
+                    <span>📄 View Authentic Bill ↗</span>
+                  </a>
+                )}
               </div>
-              {officialPortalUrl && (
-                <a
-                  href={officialPortalUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-lg whitespace-nowrap transition flex items-center gap-1.5 shadow shadow-emerald-950 flex-shrink-0"
-                >
-                  <span>Open Official Portal ↗</span>
-                </a>
-              )}
             </div>
           )}
 
