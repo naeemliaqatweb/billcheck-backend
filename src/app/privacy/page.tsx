@@ -12,10 +12,10 @@ export default function PrivacyPolicyPage() {
         
         {/* Header Badge */}
         <div className="flex items-center gap-2 mb-4">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            ✓ 100% Google Play Policy Compliant
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-700/60 text-slate-300 border border-slate-600/40">
+            Privacy &amp; Security Policy
           </span>
-          <span className="text-xs text-slate-400">Last updated: September 15, 2026</span>
+          <span className="text-xs text-slate-400">Last updated: September 19, 2026</span>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-4">

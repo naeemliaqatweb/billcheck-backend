@@ -90,19 +90,19 @@ export interface ScrapedBillResult {
 }
 
 export const PROVIDERS_META: Record<string, { name: string; type: 'electricity' | 'gas'; portalUrl?: string }> = {
-  LESCO:    { name: 'Lahore Electric Supply Company',        type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/lescobill' },
-  MEPCO:    { name: 'Multan Electric Power Company',         type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/mepcobill' },
-  FESCO:    { name: 'Faisalabad Electric Supply Company',    type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/fescobill' },
-  GEPCO:    { name: 'Gujranwala Electric Power Company',     type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/gepcobill' },
-  IESCO:    { name: 'Islamabad Electric Supply Company',     type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/iescobill' },
-  PESCO:    { name: 'Peshawar Electric Supply Company',      type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/pescobill' },
-  HESCO:    { name: 'Hyderabad Electric Supply Company',     type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/hescobill' },
-  SEPCO:    { name: 'Sukkur Electric Power Company',         type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/sepcobill' },
-  QESCO:    { name: 'Quetta Electric Supply Company',        type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/qescobill' },
-  TESCO:    { name: 'Tribal Areas Electricity Supply Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/tescobill' },
-  KELECTRIC: { name: 'K-Electric (Karachi)',                 type: 'electricity', portalUrl: 'https://www.ke.com.pk/customer-services/bill-and-e-services/' },
-  SNGPL:    { name: 'Sui Northern Gas Pipelines Limited',    type: 'gas',         portalUrl: 'https://www.sngpl.com.pk/' },
-  SSGC:     { name: 'Sui Southern Gas Company',              type: 'gas',         portalUrl: 'https://www.ssgc.com.pk/' },
+  LESCO: { name: 'Lahore Electric Supply Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/lescobill' },
+  MEPCO: { name: 'Multan Electric Power Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/mepcobill' },
+  FESCO: { name: 'Faisalabad Electric Supply Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/fescobill' },
+  GEPCO: { name: 'Gujranwala Electric Power Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/gepcobill' },
+  IESCO: { name: 'Islamabad Electric Supply Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/iescobill' },
+  PESCO: { name: 'Peshawar Electric Supply Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/pescobill' },
+  HESCO: { name: 'Hyderabad Electric Supply Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/hescobill' },
+  SEPCO: { name: 'Sukkur Electric Power Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/sepcobill' },
+  QESCO: { name: 'Quetta Electric Supply Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/qescobill' },
+  TESCO: { name: 'Tribal Areas Electricity Supply Company', type: 'electricity', portalUrl: 'https://bill.pitc.com.pk/tescobill' },
+  KELECTRIC: { name: 'K-Electric (Karachi)', type: 'electricity', portalUrl: 'https://www.ke.com.pk/customer-services/bill-and-e-services/' },
+  SNGPL: { name: 'Sui Northern Gas Pipelines Limited', type: 'gas', portalUrl: 'https://www.sngpl.com.pk/' },
+  SSGC: { name: 'Sui Southern Gas Company', type: 'gas', portalUrl: 'https://www.ssgc.com.pk/' },
 };
 
 export class BillFetchError extends Error {
@@ -559,23 +559,23 @@ async function fetchFromPitcPortal(portalUrl: string, query: string, searchType:
 
     const getHtml = await getResp.text();
 
-    const viewState       = extractHiddenInput(getHtml, '__VIEWSTATE');
-    const vsGenerator     = extractHiddenInput(getHtml, '__VIEWSTATEGENERATOR');
+    const viewState = extractHiddenInput(getHtml, '__VIEWSTATE');
+    const vsGenerator = extractHiddenInput(getHtml, '__VIEWSTATEGENERATOR');
     const eventValidation = extractHiddenInput(getHtml, '__EVENTVALIDATION');
-    const csrf            = extractHiddenInput(getHtml, '__RequestVerificationToken');
+    const csrf = extractHiddenInput(getHtml, '__RequestVerificationToken');
 
     // Step 2: POST with query and all ASP.NET tokens
     const formData = new URLSearchParams({
-      __EVENTTARGET:              '',
-      __EVENTARGUMENT:            '',
-      __LASTFOCUS:                '',
-      __VIEWSTATE:                viewState,
-      __VIEWSTATEGENERATOR:       vsGenerator,
-      __EVENTVALIDATION:          eventValidation,
+      __EVENTTARGET: '',
+      __EVENTARGUMENT: '',
+      __LASTFOCUS: '',
+      __VIEWSTATE: viewState,
+      __VIEWSTATEGENERATOR: vsGenerator,
+      __EVENTVALIDATION: eventValidation,
       __RequestVerificationToken: csrf,
-      rbSearchByList:             searchType,
-      searchTextBox:              query,
-      btnSearch:                  'Search',
+      rbSearchByList: searchType,
+      searchTextBox: query,
+      btnSearch: 'Search',
     });
 
     const postResp = await fetch(portalUrl, {
@@ -766,23 +766,23 @@ function generateMockBill(company: string, refNo: string): ScrapedBillResult {
   // Structured Charges Breakdown
   const chargesBreakdown: ChargeBreakdownItem[] = isGas
     ? [
-        { labelEn: 'Gas Consumed Charges', labelUr: 'گیس استعمال کی رقم', value: totalCost },
-        { labelEn: 'Meter Rent', labelUr: 'میٹر کا کرایہ', value: 50 },
-        { labelEn: 'General Sales Tax (GST 18%)', labelUr: 'جنرل سیلز ٹیکس', value: gst },
-        { labelEn: 'Current Bill Total', labelUr: 'کل واجب الادا رقم', value: totalWithinDueDate },
-      ]
+      { labelEn: 'Gas Consumed Charges', labelUr: 'گیس استعمال کی رقم', value: totalCost },
+      { labelEn: 'Meter Rent', labelUr: 'میٹر کا کرایہ', value: 50 },
+      { labelEn: 'General Sales Tax (GST 18%)', labelUr: 'جنرل سیلز ٹیکس', value: gst },
+      { labelEn: 'Current Bill Total', labelUr: 'کل واجب الادا رقم', value: totalWithinDueDate },
+    ]
     : [
-        { labelEn: 'Total Electricity Charges', labelUr: 'بجلی کے کل اخراجات', value: totalCost },
-        ...(subsidy > 0 ? [{ labelEn: 'Govt. Subsidies (Tariff Differential)', labelUr: 'حکومتی ریلیف سبسڈی', value: subsidy }] : []),
-        { labelEn: 'Net Electricity Charges', labelUr: 'خالص بجلی کے اخراجات', value: netCost },
-        { labelEn: 'Fuel Price Adjustment (FPA)', labelUr: 'فیول پرائس ایڈجسٹمنٹ', value: fpa },
-        { labelEn: 'Financing Cost (FC Surcharge)', labelUr: 'فنانسنگ کاسٹ سرچارج', value: fcSurcharge },
-        { labelEn: 'Quarterly Tariff Adj. (QTA)', labelUr: 'سہ ماہی ایڈجسٹمنٹ', value: qta },
-        { labelEn: 'General Sales Tax (GST 18%)', labelUr: 'سیلز ٹیکس (GST)', value: gst },
-        { labelEn: 'Electricity Duty (ED 1.5%)', labelUr: 'الیکٹرسٹی ڈیوٹی', value: electricityDuty },
-        { labelEn: 'PTV License Fee', labelUr: 'ٹی وی فیس', value: tvFee },
-        { labelEn: 'Current Bill Total', labelUr: 'موجودہ بل کی رقم', value: totalWithinDueDate },
-      ];
+      { labelEn: 'Total Electricity Charges', labelUr: 'بجلی کے کل اخراجات', value: totalCost },
+      ...(subsidy > 0 ? [{ labelEn: 'Govt. Subsidies (Tariff Differential)', labelUr: 'حکومتی ریلیف سبسڈی', value: subsidy }] : []),
+      { labelEn: 'Net Electricity Charges', labelUr: 'خالص بجلی کے اخراجات', value: netCost },
+      { labelEn: 'Fuel Price Adjustment (FPA)', labelUr: 'فیول پرائس ایڈجسٹمنٹ', value: fpa },
+      { labelEn: 'Financing Cost (FC Surcharge)', labelUr: 'فنانسنگ کاسٹ سرچارج', value: fcSurcharge },
+      { labelEn: 'Quarterly Tariff Adj. (QTA)', labelUr: 'سہ ماہی ایڈجسٹمنٹ', value: qta },
+      { labelEn: 'General Sales Tax (GST 18%)', labelUr: 'سیلز ٹیکس (GST)', value: gst },
+      { labelEn: 'Electricity Duty (ED 1.5%)', labelUr: 'الیکٹرسٹی ڈیوٹی', value: electricityDuty },
+      { labelEn: 'PTV License Fee', labelUr: 'ٹی وی فیس', value: tvFee },
+      { labelEn: 'Current Bill Total', labelUr: 'موجودہ بل کی رقم', value: totalWithinDueDate },
+    ];
 
   const surchargeTiers: SurchargeTier[] = [
     { period: 'Till Due Date', surcharge: 0, payable: totalWithinDueDate },
