@@ -562,7 +562,7 @@ export async function fetchLescoBillDetails(
           path: u.pathname,
           method: 'POST',
           agent,
-          timeout: 10000,
+          timeout: 30000,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -619,47 +619,72 @@ export async function fetchLescoBillDetails(
     const refno = (menuHtml.match(/name=["']nRefNo["']\s+value=["']([^"']+)["']/i) || [])[1] || '';
     const ru = (menuHtml.match(/name=["']strRU["']\s+value=["']([^"']+)["']/i) || [])[1] || 'U';
 
-    const histHtml = await postData('https://bill.lesco.gov.pk:36269/Modules/CustomerBillN/History.asp', {
+    const statusPayload = {
       nBatchNo: batch,
       nSubDiv: subdiv,
       nRefNo: refno,
       strRU: ru,
-    });
+    };
 
-    if (!histHtml) return null;
+    const [statusHtml, histHtml] = await Promise.all([
+      postData('https://bill.lesco.gov.pk:36269/Modules/CustomerBillN/AccountStatus.aspx', statusPayload).catch(() => ''),
+      postData('https://bill.lesco.gov.pk:36269/Modules/CustomerBillN/History.asp', statusPayload).catch(() => ''),
+    ]);
+
+    if (!histHtml && !statusHtml) return null;
+
+    function extractStatusField(html: string, label: string): string {
+      const re = new RegExp(label + '[\\s\\S]*?<strong>([\\s\\S]*?)<\\/strong>', 'i');
+      const m = html.match(re);
+      return m ? m[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, '').trim() : '';
+    }
 
     const rows: Array<{ month: string; units: number; bill: number; payment: number }> = [];
-    const trMatches = histHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
-    for (const tr of trMatches) {
-      const tds = [...tr[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) =>
-        m[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, '').trim()
-      );
-      if (tds.length >= 4 && !tds[0].toUpperCase().includes('MONTH')) {
-        const mStr = tds[0];
-        const uVal = parseInt(tds[1].replace(/,/g, ''), 10) || 0;
-        const bVal = parseInt(tds[2].replace(/,/g, ''), 10) || 0;
-        const pVal = parseInt(tds[3].replace(/,/g, ''), 10) || 0;
-        rows.push({ month: mStr, units: uVal, bill: bVal, payment: pVal });
+    if (histHtml) {
+      const trMatches = histHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+      for (const tr of trMatches) {
+        const tds = [...tr[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) =>
+          m[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, '').trim()
+        );
+        if (tds.length >= 4 && !tds[0].toUpperCase().includes('MONTH')) {
+          const mStr = tds[0];
+          const uVal = parseInt(tds[1].replace(/,/g, ''), 10) || 0;
+          const bVal = parseInt(tds[2].replace(/,/g, ''), 10) || 0;
+          const pVal = parseInt(tds[3].replace(/,/g, ''), 10) || 0;
+          rows.push({ month: mStr, units: uVal, bill: bVal, payment: pVal });
+        }
       }
     }
 
-    if (rows.length === 0) return null;
-
-    const latest = rows[rows.length - 1];
+    const latest = rows.length > 0 ? rows[rows.length - 1] : null;
     const prev = rows.length > 1 ? rows[rows.length - 2] : null;
 
-    const isPaid = latest.payment >= latest.bill && latest.payment > 0;
-    const billStatus: 'paid' | 'unpaid' = isPaid ? 'paid' : 'unpaid';
+    let custName = extractStatusField(statusHtml, 'Customer Name:');
+    let custAddr = extractStatusField(statusHtml, 'Address:');
+    let lastBillMonth = extractStatusField(statusHtml, 'Last Bill Month:');
+    let issueDateRaw = extractStatusField(statusHtml, 'Bill Issue Date:');
+    let dueDateRaw = extractStatusField(statusHtml, 'Due Date:');
+    const payableWithinRaw = parseInt(extractStatusField(statusHtml, 'Amount Payable Within Due Date:').replace(/[^0-9]/g, ''), 10) || 0;
+    const payableAfterRaw = parseInt(extractStatusField(statusHtml, 'Amount Payable After Due Date:').replace(/[^0-9]/g, ''), 10) || 0;
+    const amountPaidRaw = parseInt(extractStatusField(statusHtml, 'Amount Paid:').replace(/[^0-9]/g, ''), 10) || 0;
 
-    const monthParts = latest.month.split('-');
-    const monAbbr = (monthParts[0] || 'SEP').toUpperCase();
-    const yrSuffix = monthParts[1] || '26';
-    const cleanBillMonth = `${monAbbr} ${yrSuffix}`;
+    const hasLiveAccountStatus = payableWithinRaw > 0;
 
-    const payableWithinDueDate = latest.bill;
-    const latePaymentSurcharge = Math.round(payableWithinDueDate * 0.08);
-    const payableAfterDueDate = payableWithinDueDate + latePaymentSurcharge;
-    const unitsConsumed = latest.units;
+    let payableWithinDueDate = hasLiveAccountStatus ? payableWithinRaw : (latest?.bill || 0);
+    let payableAfterDueDate = hasLiveAccountStatus && payableAfterRaw > 0 ? payableAfterRaw : Math.round(payableWithinDueDate * 1.08);
+    let latePaymentSurcharge = payableAfterDueDate - payableWithinDueDate;
+    let unitsConsumed = latest?.units || 0;
+
+    let cleanBillMonth = lastBillMonth || (latest ? latest.month.replace('-', ' ') : 'OCT 26');
+    let issueDate = issueDateRaw || `05 ${cleanBillMonth.split(' ')[0]} 2026`;
+    let dueDate = dueDateRaw || `22 ${cleanBillMonth.split(' ')[0]} 2026`;
+
+    let billStatus: 'paid' | 'unpaid' = 'unpaid';
+    if (hasLiveAccountStatus) {
+      billStatus = (amountPaidRaw >= payableWithinDueDate && amountPaidRaw > 0) ? 'paid' : 'unpaid';
+    } else if (latest) {
+      billStatus = (latest.payment >= latest.bill && latest.payment > 0) ? 'paid' : 'unpaid';
+    }
 
     const history12Months: BillMonthHistory[] = rows.map((r, idx) => {
       const p = r.month.split('-');
@@ -681,6 +706,18 @@ export async function fetchLescoBillDetails(
       };
     });
 
+    // If latest live month is not in history (e.g. current unbilled/unpaid month), append it
+    const isAlreadyInHistory = history12Months.some((h) => h.month.toUpperCase() === cleanBillMonth.toUpperCase());
+    if (hasLiveAccountStatus && !isAlreadyInHistory) {
+      history12Months.push({
+        month: cleanBillMonth,
+        year: monthLabelToYear(cleanBillMonth),
+        units: unitsConsumed,
+        amount: payableWithinDueDate,
+        status: billStatus,
+      });
+    }
+
     const consumerIdVal = isConsumerId ? clean : (cleanRealRef.length <= 10 ? cleanRealRef : '');
 
     return {
@@ -690,13 +727,13 @@ export async function fetchLescoBillDetails(
       company: 'LESCO',
       companyName: 'Lahore Electric Supply Company',
       utilityType: 'electricity',
-      consumerName: `LESCO Consumer (${consumerIdVal || cleanRealRef})`,
-      consumerAddress: `Lahore, SubDivision ${subdiv}`,
+      consumerName: custName || `LESCO Consumer (${consumerIdVal || cleanRealRef})`,
+      consumerAddress: custAddr ? `${custAddr}, Lahore` : `Lahore, SubDivision ${subdiv}`,
       subDivision: `SubDiv ${subdiv}`,
       feederName: 'LESCO Feeder',
       billMonth: cleanBillMonth,
-      issueDate: `05 ${monAbbr.slice(0, 3)} 20${yrSuffix}`,
-      dueDate: `22 ${monAbbr.slice(0, 3)} 20${yrSuffix}`,
+      issueDate,
+      dueDate,
       payableWithinDueDate,
       payableAfterDueDate,
       latePaymentSurcharge,
