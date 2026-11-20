@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'BillCheck PK (PakBill Hub) - Pakistan Utility Bill Checker & Tracker',
-  description: 'Instant live electricity and gas bill checker for Pakistan. Check LESCO, MEPCO, IESCO, FESCO, GEPCO, PESCO, HESCO, SEPCO, QESCO, TESCO, K-Electric, SNGPL, and SSGC bills.',
+  description: 'Instant live electricity and gas bill checker for Pakistan. Check LESCO, MEPCO, IESCO, FESCO, GEPCO, PESCO, HESCO, SEPCO, QESCO, TESCO, SNGPL, and SSGC bills.',
 };
 
 const ELECTRICITY_PROVIDERS = [
@@ -18,7 +18,6 @@ const ELECTRICITY_PROVIDERS = [
   { code: 'SEPCO', name: 'SEPCO', city: 'Sukkur & Larkana', color: 'from-indigo-500/20 to-indigo-600/10' },
   { code: 'QESCO', name: 'QESCO', city: 'Quetta & Balochistan', color: 'from-rose-500/20 to-rose-600/10' },
   { code: 'TESCO', name: 'TESCO', city: 'Tribal Areas', color: 'from-lime-500/20 to-lime-600/10' },
-  { code: 'KE', name: 'K-Electric', city: 'Karachi Metro', color: 'from-sky-500/20 to-sky-600/10' },
 ];
 
 const GAS_PROVIDERS = [
@@ -29,9 +28,9 @@ const GAS_PROVIDERS = [
 const FEATURES = [
   {
     icon: '⚡',
-    title: 'All Electricity DISCOs (11 Providers)',
-    titleUr: 'تمام 11 بجلی کمپنیوں کے بل',
-    desc: 'Check live bills for LESCO, MEPCO, IESCO, FESCO, GEPCO, PESCO, HESCO, SEPCO, QESCO, TESCO, and K-Electric.',
+    title: 'All Electricity DISCOs (10 Providers)',
+    titleUr: 'تمام 10 بجلی کمپنیوں کے بل',
+    desc: 'Check live bills for LESCO, MEPCO, IESCO, FESCO, GEPCO, PESCO, HESCO, SEPCO, QESCO, and TESCO.',
   },
   {
     icon: '🔥',
@@ -192,7 +191,7 @@ export default function Home() {
             </strong>
             <p className="text-slate-300 text-xs leading-relaxed">
               <strong>BillCheck PK</strong> is an independent utility application developed and operated by{' '}
-              <strong className="text-white">Arcloom Tech</strong>. This application is <strong>NOT</strong> affiliated with, endorsed by, authorized by, or in any way officially connected with the Government of Pakistan, PITC, PEPCO, NEPRA, or individual electricity distribution companies (LESCO, MEPCO, IESCO, FESCO, GEPCO, PESCO, HESCO, SEPCO, QESCO, TESCO, K-Electric) or gas providers (SNGPL, SSGC). All utility trademarks and provider names belong to their respective registered entities.
+              <strong className="text-white">Arcloom Tech</strong>. This application is <strong>NOT</strong> affiliated with, endorsed by, authorized by, or in any way officially connected with the Government of Pakistan, PITC, PEPCO, NEPRA, or individual electricity distribution companies (LESCO, MEPCO, IESCO, FESCO, GEPCO, PESCO, HESCO, SEPCO, QESCO, TESCO) or gas providers (SNGPL, SSGC). All utility trademarks and provider names belong to their respective registered entities.
             </p>
           </div>
         </div>
@@ -242,7 +241,7 @@ export default function Home() {
               Supported Power &amp; Gas Providers
             </h2>
             <p className="text-slate-400 text-xs mt-2">
-              Covers all distribution companies under PITC / WAPDA as well as Karachi K-Electric and Gas utilities.
+              Covers all distribution companies under PITC / WAPDA as well as Gas utilities (SNGPL & SSGC).
             </p>
           </div>
 

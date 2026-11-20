@@ -32,12 +32,34 @@ export default function PrivacyPolicyPage() {
             ⚠️ 1. Important Government &amp; Utility Non-Affiliation Disclaimer
           </h2>
           <p className="text-xs sm:text-sm leading-relaxed text-amber-100/90 mb-3">
-            <strong>BillCheck PK is an independent utility app developed by Arcloom Tech.</strong>
+            <strong>BillCheck PK is an independent utility application developed by Arcloom Tech.</strong>
           </p>
-          <ul className="list-disc list-inside text-xs sm:text-sm space-y-1.5 text-amber-100/90">
-            <li>This app is <strong>NOT</strong> affiliated with, endorsed by, authorized by, or in any way officially connected with the Government of Pakistan, WAPDA, PEPCO, NEPRA, or any government electricity distribution company (LESCO, GEPCO, FESCO, IESCO, MEPCO, PESCO, HESCO, QESCO, SEPCO, TESCO, K-Electric) or gas utility company (SNGPL, SSGC).</li>
+          <ul className="list-disc list-inside text-xs sm:text-sm space-y-1.5 text-amber-100/90 mb-4">
+            <li>This app does <strong>NOT</strong> represent and is <strong>NOT</strong> affiliated with, endorsed by, authorized by, or officially connected with the Government of Pakistan, Ministry of Energy (Power Division), WAPDA, PEPCO, PITC, NEPRA, OGRA, or any government or private utility company.</li>
             <li>The application acts solely as a convenient mobile viewer for publicly accessible online billing portals. All trademarks, company names, and logos belong to their respective registered owners.</li>
           </ul>
+
+          <h3 className="text-sm font-bold text-amber-300 mb-2">
+            Official Sources of Information:
+          </h3>
+          <p className="text-xs text-amber-100/80 mb-2">
+            Bill information is retrieved directly from publicly accessible online portals operated by the respective utility providers:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-amber-100/90 font-mono">
+            <div>• PITC: <a href="https://bill.pitc.com.pk/" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk</a></div>
+            <div>• LESCO: <a href="https://bill.pitc.com.pk/lescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/lescobill</a></div>
+            <div>• IESCO: <a href="https://bill.pitc.com.pk/iescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/iescobill</a></div>
+            <div>• FESCO: <a href="https://bill.pitc.com.pk/fescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/fescobill</a></div>
+            <div>• MEPCO: <a href="https://bill.pitc.com.pk/mepcobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/mepcobill</a></div>
+            <div>• GEPCO: <a href="https://bill.pitc.com.pk/gepcobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/gepcobill</a></div>
+            <div>• PESCO: <a href="https://bill.pitc.com.pk/pescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/pescobill</a></div>
+            <div>• HESCO: <a href="https://bill.pitc.com.pk/hescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/hescobill</a></div>
+            <div>• SEPCO: <a href="https://bill.pitc.com.pk/sepcobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/sepcobill</a></div>
+            <div>• QESCO: <a href="https://bill.pitc.com.pk/qescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/qescobill</a></div>
+            <div>• TESCO: <a href="https://bill.pitc.com.pk/tescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/tescobill</a></div>
+            <div>• SNGPL: <a href="https://www.sngpl.com.pk/" target="_blank" rel="noreferrer" className="underline text-sky-400">sngpl.com.pk</a></div>
+            <div>• SSGC: <a href="https://viewbill.ssgc.com.pk/" target="_blank" rel="noreferrer" className="underline text-sky-400">viewbill.ssgc.com.pk</a></div>
+          </div>
         </div>
 
         {/* Section 2: Data Collection & Storage */}

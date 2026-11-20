@@ -3,7 +3,7 @@ import { fetchBillDetails, PROVIDERS_META, getOfficialPortalDirectUrl, BillFetch
 
 // ── In-Memory Serverless Cache Map (12-Hour TTL) ─────────────────────────────
 interface CacheEntry {
-  data: any;
+  data: unknown;
   cachedAt: number;
 }
 const BILL_CACHE = new Map<string, CacheEntry>();
