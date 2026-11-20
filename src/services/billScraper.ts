@@ -1259,8 +1259,18 @@ export async function fetchOfficialLescoBillHtml(cleanRef: string): Promise<stri
     });
 
     if (r4.ok) {
-      const html = await r4.text();
+      let html = await r4.text();
       if (html && (html.includes('Bill') || html.includes('LESCO') || html.length > 1000)) {
+        html = html
+          .replace(/src=["']Images\//gi, 'src="https://bill.lesco.gov.pk:36260/Images/')
+          .replace(/href=["']\.\/zoom\//gi, 'href="https://bill.lesco.gov.pk:36260/zoom/')
+          .replace(/href=["']zoom\//gi, 'href="https://bill.lesco.gov.pk:36260/zoom/')
+          .replace(/src=["']\.\/zoom\//gi, 'src="https://bill.lesco.gov.pk:36260/zoom/')
+          .replace(/<meta content="width=device-width[^"]*" name="viewport" \/>/i, '<meta name="viewport" content="width=885, initial-scale=0.45, user-scalable=yes" />');
+
+        if (!html.includes('<base')) {
+          html = html.replace(/<head[^>]*>/i, '<head><base href="https://bill.lesco.gov.pk:36260/">');
+        }
         return html;
       }
     }
