@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-700/60 text-slate-300 border border-slate-600/40">
             Privacy &amp; Security Policy
           </span>
-          <span className="text-xs text-slate-400">Last updated: September 19, 2026</span>
+          <span className="text-xs text-slate-400">Last updated: November 20, 2026</span>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-4">
@@ -39,8 +39,12 @@ export default function PrivacyPolicyPage() {
             <li>The application acts solely as a convenient mobile viewer for publicly accessible online billing portals. All trademarks, company names, and logos belong to their respective registered owners.</li>
           </ul>
 
+          <div className="p-3 mb-4 rounded-lg bg-amber-950/40 border border-amber-500/20 text-xs text-amber-200/90 leading-relaxed" dir="rtl">
+            <strong>اہم وضاحت (Urdu):</strong> یہ ایپ ایک نجی و آزاد یوٹیلیٹی ٹول ہے۔ اس کا حکومتِ پاکستان، وزارتِ توانائی، یا کسی بھی سرکاری ڈسکوز کمپنی سے کوئی باضابطہ الحاق یا نمائندگی نہیں ہے۔ یہ ایپ صرف عوامی طور پر دستیاب ویب پورٹلز سے صارف کو اس کا جائز بل دکھانے میں مدد فراہم کرتی ہے۔
+          </div>
+
           <h3 className="text-sm font-bold text-amber-300 mb-2">
-            Official Sources of Information:
+            Official Sources of Government &amp; Utility Information:
           </h3>
           <p className="text-xs text-amber-100/80 mb-2">
             Bill information is retrieved directly from publicly accessible online portals operated by the respective utility providers:
@@ -57,6 +61,7 @@ export default function PrivacyPolicyPage() {
             <div>• SEPCO: <a href="https://bill.pitc.com.pk/sepcobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/sepcobill</a></div>
             <div>• QESCO: <a href="https://bill.pitc.com.pk/qescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/qescobill</a></div>
             <div>• TESCO: <a href="https://bill.pitc.com.pk/tescobill" target="_blank" rel="noreferrer" className="underline text-sky-400">bill.pitc.com.pk/tescobill</a></div>
+            <div>• K-Electric: <a href="https://www.ke.com.pk/customer-services/bill-and-e-services/" target="_blank" rel="noreferrer" className="underline text-sky-400">ke.com.pk</a></div>
             <div>• SNGPL: <a href="https://www.sngpl.com.pk/" target="_blank" rel="noreferrer" className="underline text-sky-400">sngpl.com.pk</a></div>
             <div>• SSGC: <a href="https://viewbill.ssgc.com.pk/" target="_blank" rel="noreferrer" className="underline text-sky-400">viewbill.ssgc.com.pk</a></div>
           </div>
@@ -91,10 +96,13 @@ export default function PrivacyPolicyPage() {
         {/* Section 4: Data Deletion */}
         <div className="mb-8">
           <h2 className="text-lg font-bold text-white mb-3">
-            4. Data Retention &amp; User Control
+            4. Data Retention &amp; User Data Deletion
           </h2>
+          <p className="text-sm text-slate-300 leading-relaxed mb-2">
+            You retain 100% control over your data. Because all account references and meter numbers are saved strictly on your local device, you can delete all saved records, history, and cached bills at any time by tapping <em>&quot;Clear Saved Bills &amp; Reset App&quot;</em> in the App Settings, or by clearing app storage / uninstalling the app from Android Settings.
+          </p>
           <p className="text-sm text-slate-300 leading-relaxed">
-            You retain 100% control over your data. You can delete all saved meters and local cached bills at any time by tapping <em>&quot;Clear Saved Bills &amp; Reset App&quot;</em> in the App Settings.
+            For any queries or if you wish to request the manual erasure of any support correspondence, you may contact our privacy desk at <a href="mailto:support@arcloom.com" className="text-sky-400 underline">support@arcloom.com</a>.
           </p>
         </div>
 
