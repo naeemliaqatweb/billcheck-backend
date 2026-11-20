@@ -1177,6 +1177,99 @@ export async function fetchBillDetails(
 /**
  * Fetches the raw, authentic duplicate bill HTML directly from the official utility provider server.
  */
+/**
+ * Fetches the authentic printable LESCO bill HTML with automated CAPTCHA extraction
+ */
+export async function fetchOfficialLescoBillHtml(cleanRef: string): Promise<string | null> {
+  try {
+    const isCustId = cleanRef.length <= 10;
+    let postBody: string;
+
+    if (isCustId) {
+      postBody = new URLSearchParams({
+        txtCustID: cleanRef,
+        btnViewMenu: 'Customer Menu',
+      }).toString();
+    } else {
+      const batch = cleanRef.slice(0, 2);
+      const subdiv = cleanRef.slice(2, 7);
+      const refno = cleanRef.slice(7, 14);
+      const ru = cleanRef.slice(14, 15).toUpperCase() || 'U';
+      postBody = new URLSearchParams({
+        txtBatchNo: batch,
+        txtSubDiv: subdiv,
+        txtRefNo: refno,
+        cmbRU: ru,
+        btnViewMenu: 'Customer Menu',
+      }).toString();
+    }
+
+    const r1 = await fetch('https://bill.lesco.gov.pk:36269/Modules/CustomerBillN/CustomerMenu.asp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: postBody,
+    });
+
+    const cookie = r1.headers.get('set-cookie') || '';
+    const t1 = await r1.text();
+
+    const batch = (t1.match(/name="nBatchNo" value="(\d+)"/) || [])[1];
+    const subdiv = (t1.match(/name="nSubDiv" value="(\d+)"/) || [])[1];
+    const refno = (t1.match(/name="nRefNo" value="(\d+)"/) || [])[1];
+    const ru = (t1.match(/name="strRU" value="([^"]+)"/) || [])[1] || 'U';
+
+    if (!batch || !subdiv || !refno) return null;
+
+    // Grab automated captcha code from codeimage.asp 302 redirect
+    const r2 = await fetch('https://bill.lesco.gov.pk:36269/Modules/CustomerBillN/codeimage.asp', {
+      headers: { Cookie: cookie },
+      redirect: 'manual',
+    });
+    const loc = r2.headers.get('location') || '';
+    const t2 = await r2.text();
+    const captchaCode = (loc + t2).match(/code=([^&"]+)/)?.[1];
+    if (!captchaCode) return null;
+
+    // Submit BillPrint.asp with session and extracted code
+    await fetch('https://bill.lesco.gov.pk:36269/Modules/CustomerBillN/BillPrint.asp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: cookie },
+      body: new URLSearchParams({
+        nBatchNo: batch,
+        nSubDiv: subdiv,
+        nRefNo: refno,
+        strRU: ru,
+        nCustID: '',
+        code: captchaCode,
+        MSpTp: '',
+      }).toString(),
+    });
+
+    // Obtain final full printable bill HTML from Bill.aspx
+    const r4 = await fetch('https://bill.lesco.gov.pk:36260/Bill.aspx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        BatchNo: batch,
+        SubDiv: subdiv,
+        RefNo: refno,
+        RU: ru,
+        CapCode: captchaCode,
+      }).toString(),
+    });
+
+    if (r4.ok) {
+      const html = await r4.text();
+      if (html && (html.includes('Bill') || html.includes('LESCO') || html.length > 1000)) {
+        return html;
+      }
+    }
+  } catch (err) {
+    console.error('[BillScraper] fetchOfficialLescoBillHtml error:', err);
+  }
+  return null;
+}
+
 export async function fetchOfficialBillHtml(
   companyKey: string,
   rawRef: string,
@@ -1186,6 +1279,12 @@ export async function fetchOfficialBillHtml(
   const clean = cleanReferenceNumber(rawRef);
   const meta = PROVIDERS_META[company];
 
+  // 1. Direct LESCO automated CAPTCHA fetch (bypasses reCAPTCHA form completely)
+  if (company === 'LESCO') {
+    const lescoHtml = await fetchOfficialLescoBillHtml(clean);
+    if (lescoHtml) return lescoHtml;
+  }
+
   const pitcCompanies = ['LESCO', 'MEPCO', 'FESCO', 'GEPCO', 'IESCO', 'PESCO', 'HESCO', 'SEPCO', 'QESCO', 'TESCO'];
 
   if (meta?.portalUrl && pitcCompanies.includes(company)) {
@@ -1194,10 +1293,10 @@ export async function fetchOfficialBillHtml(
       const secondaryMode: 'refno' | 'appno' = primaryMode === 'appno' ? 'refno' : 'appno';
 
       let html = await fetchFromPitcPortal(meta.portalUrl, clean, primaryMode);
-      if (html && html.length > 200) return html;
+      if (html && html.length > 200 && !html.includes('captchaInput')) return html;
 
       html = await fetchFromPitcPortal(meta.portalUrl, clean, secondaryMode);
-      if (html && html.length > 200) return html;
+      if (html && html.length > 200 && !html.includes('captchaInput')) return html;
     } catch (err) {
       console.error(`[BillScraper] fetchOfficialBillHtml failed for ${company}:`, err);
     }
